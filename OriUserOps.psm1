@@ -37,7 +37,7 @@ function Unemploy-User
             Example: Unemploy-User ZPamfil -Seriously YES
             For help, do: Get-Help Unemploy-User
             "
-            throw ('Not serious.')
+            Throw ('Not serious.')
         }
         $filter = 'OSWOriflameAllEmployees', 'Domain Users', '*AllUserObjects'
     }
@@ -45,13 +45,13 @@ function Unemploy-User
 
     Process
     {
-        try
+        Try
         {
             Get-ADUser $username -property DistinguishedName, DisplayName, Title | Select-Object DistinguishedName, DisplayName, Title | Format-List
         }
-        catch
+        Catch
         {
-            throw "No such user object ($username)."
+            Throw "No such user object ($username)."
         }
 
         Write-Verbose "Disabling AD user object $username"
@@ -85,10 +85,9 @@ function Unemploy-User
         Get-Mailbox -Identity $username | Out-Null
         if (!$?)
         {
-            throw "Get-Mailbox failed. Maybe user has no mailbox or you're not running this inside the Exchange Management Shell."
+            Throw "Get-Mailbox failed. Maybe user has no mailbox or you're not running this inside the Exchange Management Shell."
         }
         Set-Mailbox -Identity $username -HiddenFromAddressListsEnabled $true
-        #Hide-UserFromGAL $username
     }
     
     End
@@ -126,19 +125,17 @@ function Hide-UserFromGAL
         [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)][string]$username
     )
 
-    #try 
-    #{  
         Get-Mailbox -Identity $username
-        if (!$?) { throw "Get-Mailbox failed. Maybe user has no mailbox or you're not running this inside the Exchange Management Shell." }
+        if (!$?)
+        {
+            Write-Warning -Message ("Get-Mailbox failed." +
+            'No mailbox associated with username' +
+            ' or you are not running this inside the' +
+            ' Exchange Management Shell.')
+            Throw "Terminating Error: Get-Mailbox failed."
+        }
         Set-Mailbox -Identity $username -HiddenFromAddressListsEnabled $false
-    #}
-    #catch
-    #{
-         #Write-Warning "Set-Mailbox not available. Exchange Management Tools probably not installed
-         #on this box or you are trying to run this cmdlet outside Exchange Management Shell.
-         #Could not hide $username from Global Address List."
-    #}
-}
+ }
 
 <#
 .Synopsis
@@ -164,14 +161,13 @@ function Get-Photo
   
     Process
     {
-        try
+        Try
         {
             [byte[]]$thumb = (Get-ADUser $Username -property thumbnailPhoto -EA Stop | Select -ExpandProperty thumbnailPhoto)
         }
-        catch
+        Catch
         {
-            $error[0]
-            Throw "Get-ADUser didn't work."
+            Throw "$_.Exception.Message"
         }
         
         Add-Type -AssemblyName System.Windows.Forms
@@ -186,7 +182,7 @@ function Get-Photo
         $pictureBox.Image = $img
 
         $form = new-object Windows.Forms.Form
-        $form.Text = "Image Viewer"
+        $form.Text = "thumb"
         $form.Width = $img.Width
         $form.Height =  $img.Height
         $form.AutoSize = $True
@@ -239,12 +235,12 @@ function Set-Photo
 
     Begin
     {
-        Try { Get-ADUser $Username -ErrorAction Stop }
+        Try { Get-ADUser $Username -ErrorAction Stop | Out-Null }
         Catch { Throw "No such Username ($Username)." }
         
-        Try { Get-ChildItem $Filename -ErrorAction Stop }
-        Catch { Throw "$Filename not found." }
-
+        (Get-Item $Filename -ErrorAction Stop | Out-Null).Exists
+        $Filename_w_path = (Get-Item $Filename).Fullname
+        
         $tmpFile = "$env:TEMP" + "\$Username"
     }
 
@@ -252,8 +248,7 @@ function Set-Photo
     {
         Add-Type -AssemblyName System.Drawing
 
-        #do a test if filename exists, try current dir first
-        $image = [System.Drawing.Image]::FromFile($filename)
+        $image = [System.Drawing.Image]::FromFile($Filename_w_path)
         $newWidth = 96
         $newHeight = 96
 
