@@ -1,4 +1,4 @@
-﻿<#
+<#
 .Synopsis
    Disable AD User Object and hide from Global Address List.
 .DESCRIPTION
