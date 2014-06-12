@@ -166,7 +166,7 @@ function Get-Photo
     {
         try
         {
-            [byte[]]$thumbnailPhoto = (Get-ADUser $Username -property thumbnailPhoto -EA Stop | Select -ExpandProperty thumbnailPhoto)
+            [byte[]]$thumb = (Get-ADUser $Username -property thumbnailPhoto -EA Stop | Select -ExpandProperty thumbnailPhoto)
         }
         catch
         {
@@ -176,7 +176,7 @@ function Get-Photo
         
         Add-Type -AssemblyName System.Windows.Forms
 
-        $img = [System.Drawing.Image]::FromStream([System.IO.MemoryStream]$thumbnailPhoto)
+        $img = [System.Drawing.Image]::FromStream([System.IO.MemoryStream]$thumb)
         $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($PSHOME + "\powershell.exe")
         
         [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -196,6 +196,16 @@ function Get-Photo
         $form.Add_Shown( { $form.Activate() } )
         $form.ShowDialog()
     }
+
+    End
+    {
+        $form.Dispose()
+        $pictureBox.Dispose()
+        $icon.Dispose()
+        $img.Dispose()
+        Remove-Variable thumb
+    }
+
 }
 
 <#
