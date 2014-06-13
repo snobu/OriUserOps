@@ -130,7 +130,7 @@ function Hide-UserFromGAL
      
         if ($PSCmdlet.ShouldProcess("$Username", "Set HiddenFromAddressListsEnabled bit to True"))
         {
-            Set-Mailbox -Identity $username -HiddenFromAddressListsEnabled $false
+            Set-Mailbox -Identity $username -HiddenFromAddressListsEnabled $True
         }
        
         if (! $?)
