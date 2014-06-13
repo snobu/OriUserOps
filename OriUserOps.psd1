@@ -5,7 +5,7 @@
 #
 # Generated on: 03.06.2014
 #
-# Last modified: 11.06.2014
+# Last modified: 13.06.2014
 
 @{
 
@@ -13,7 +13,7 @@
 RootModule = 'OriUserOps.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.92'
+ModuleVersion = '0.93'
 
 # ID used to uniquely identify this module
 GUID = '90be170d-dea2-4c8d-9baa-6a0196c96dfb'

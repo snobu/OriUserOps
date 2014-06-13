@@ -58,7 +58,7 @@ function Unemploy-User
         Disable-ADAccount $username
         
         Write-Verbose "Set new Description"
-        Set-ADUser $username -Description "Disabled $(Get-Date -Format 'dd.mm.yyyy') / Ticket#: $SerenaTicketID / Requested by: $RequestInitiator"
+        Set-ADUser $username -Description "Disabled $(Get-Date -Format 'dd.MM.yyyy') / Ticket#: $SerenaTicketID / Requested by: $RequestInitiator"
 
         if (TryGoodbyeOU($username))
         {
@@ -76,18 +76,24 @@ function Unemploy-User
         {
             if ($grp.name -notin ($filter))
             {
-            Write-Verbose "Removing $username from group: $grp.name"
-            Remove-ADGroupMember -Identity $grp -Members $username -Confirm:$false
+                Write-Verbose "Removing $username from group: $grp.name"
+                Try
+                {
+                    Remove-ADGroupMember -Identity $grp -Members $username -Confirm:$false -ErrorAction SilentlyContinue
+                }
+                Catch
+                {
+                    Write-Warning $_.Exception.Message
+                }
             }
         }
 
         Write-Verbose "Hiding user from Global Address List"
-        Get-Mailbox -Identity $username | Out-Null
+        Set-Mailbox -Identity $username -HiddenFromAddressListsEnabled $true -ErrorAction Stop
         if (!$?)
         {
             Throw "Get-Mailbox failed. Maybe user has no mailbox or you're not running this inside the Exchange Management Shell."
-        }
-        Set-Mailbox -Identity $username -HiddenFromAddressListsEnabled $true
+        }        
     }
     
     End
@@ -129,7 +135,7 @@ function Hide-UserFromGAL
         if (!$?)
         {
             Write-Warning -Message ("Get-Mailbox failed." +
-            'No mailbox associated with username' +
+            ' No mailbox associated with username' +
             ' or you are not running this inside the' +
             ' Exchange Management Shell.')
             Throw "Terminating Error: Get-Mailbox failed."
