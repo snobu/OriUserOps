@@ -83,17 +83,14 @@ function Unemploy-User
                 }
                 Catch
                 {
+                    Write-Warning "While trying to remove $username from group $grp.name, this happened:"
                     Write-Warning $_.Exception.Message
                 }
             }
         }
 
         Write-Verbose "Hiding user from Global Address List"
-        Set-Mailbox -Identity $username -HiddenFromAddressListsEnabled $true -ErrorAction Stop
-        if (!$?)
-        {
-            Throw "Get-Mailbox failed. Maybe user has no mailbox or you're not running this inside the Exchange Management Shell."
-        }        
+        Hide-UserFromGAL $username
     }
     
     End
@@ -130,17 +127,20 @@ function Hide-UserFromGAL
     (
         [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)][string]$username
     )
-
-        Get-Mailbox -Identity $username
-        if (!$?)
+     
+        if ($PSCmdlet.ShouldProcess("$Username", "Set HiddenFromAddressListsEnabled bit to True"))
         {
-            Write-Warning -Message ("Get-Mailbox failed." +
+            Set-Mailbox -Identity $username -HiddenFromAddressListsEnabled $false
+        }
+       
+        if (! $?)
+        {
+            Write-Warning -Message ("Set-Mailbox failed." +
             ' No mailbox associated with username' +
             ' or you are not running this inside the' +
             ' Exchange Management Shell.')
-            Throw "Terminating Error: Get-Mailbox failed."
+            Throw "Terminating Error: Set-Mailbox failed."
         }
-        Set-Mailbox -Identity $username -HiddenFromAddressListsEnabled $false
  }
 
 <#
